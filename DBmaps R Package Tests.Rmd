@@ -1,0 +1,104 @@
+---
+title: "DBmaps R package Test"
+author: "Huu Phuc Tran"
+date: "2025-04-03"
+output: pdf_document
+---
+## DBmaps R Package Test
+### Easy
+
+Load the given data tables
+```{r}
+library(data.table)
+
+students <- data.table(id = c("A", "B", "C", "D"), 
+                       Birthdate = c("2001-08-04", "2002-04-28", "2002-06-13", "2002-02-09"))
+
+scores <- data.table(id = c("B", "C", "E"), homework = c(87,94,92), quiz = c(91, 90, 87))
+```
+
+* Left Merge
+```{r}
+# Includes all rows from the first data table and matching rows from the second
+left_merge <- merge(students, scores, by = "id", all.x = TRUE)
+left_merge
+```
+* Right Merge
+```{r}
+# Includes all rows from the second data table and matching rows from the first
+right_merge <- merge(students, scores, by = "id", all.y = TRUE)
+right_merge
+```
+
+* Inner Merge
+```{r}
+# Includes only rows with matching records in both data tables
+inner_merge <- merge(students, scores, by = "id")
+inner_merge
+```
+
+* Outer Merge
+```{r}
+# Includes all rows in both data tables
+right_merge <- merge(students, scores, by = "id", all = TRUE)
+right_merge
+```
+
+### Medium
+```{r}
+# Create a function to merge 2 tables and then merge the third one to the combined table
+merge_tables <- function(x, y, z, 
+                         key_xy, 
+                         key_z, 
+                         join_type_xy = "inner", 
+                         join_type_combined_z = "inner") {
+  
+  # Create a helper function to prompt merge type
+  merge_type <- function(join_type) {
+    switch(join_type,
+           "inner" = list(all.x = FALSE, all.y = FALSE),
+           "outer" = list(all.x = TRUE, all.y = TRUE),
+           "left" = list(all.x = TRUE, all.y = FALSE),
+           "right" = list(all.x = FALSE, all.y = TRUE),
+           stop("Invalid join type. Choose from 'inner', 'outer', 'left', or 'right'.")
+    )
+  }
+  
+  # Merge table x and y
+  type_xy <- merge_type(join_type_xy)
+  combined_xy <- merge(x, y, 
+                       by = key_xy, 
+                       all.x = type_xy$all.x, 
+                       all.y = type_xy$all.y)
+
+  # Merge the resulting table with table z
+  type_combined_z <- merge_type(join_type_combined_z)
+  final_table <- merge(combined_xy, z, 
+                       by = key_z, 
+                       all.x = type_combined_z$all.x, 
+                       all.y = type_combined_z$all.y)
+
+  # Return the final merged table
+  return(final_table)
+}
+
+# Testing
+
+# Create a third data table
+subjects <- data.table(id = c("A", "D", "E"), courseid = c(123,456,789))
+
+# Test out the function
+student_table <- merge_tables(
+  students, scores, subjects,
+  key_xy = "id", 
+  key_z = "id",
+  join_type_xy = "left",
+  join_type_combined_z = "left"
+)
+student_table
+```
+
+
+
+
+
